@@ -1,0 +1,210 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101411">
+<link rel="manifest" href="manifest.json">
+<title>GYM TRACKER</title>
+<style>
+:root{--bg:#101411;--panel:#1b211d;--green:#a3f36b;--muted:#9ba69d;--white:#f5f7f4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--white);font-family:system-ui,sans-serif;padding-bottom:85px}
+header{padding:25px 20px 12px}
+h1{font-size:25px;margin:0;letter-spacing:1px}
+h1 span{color:var(--green)}
+small,.muted{color:var(--muted)}
+main{padding:12px 18px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#171d19;display:flex;justify-content:space-around;padding:12px 3px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #303a32}
+nav button{background:none;border:0;color:var(--muted);font-size:12px}
+nav button.active{color:var(--green)}
+nav button span{display:block;font-size:20px;margin-bottom:3px}
+.card{background:var(--panel);padding:17px;border-radius:15px;margin:12px 0}
+h2{font-size:19px;margin:8px 0 15px}
+h3{font-size:16px;margin:5px 0}
+input,select{width:100%;background:#101612;border:1px solid #39443b;border-radius:9px;padding:12px;color:white;margin:6px 0 12px;font-size:16px}
+button.primary{background:var(--green);color:#14200e;border:0;border-radius:10px;padding:13px 17px;font-weight:bold;width:100%;font-size:15px}
+button.secondary{background:#303a32;color:white;border:0;border-radius:9px;padding:10px;margin:4px}
+.row{display:flex;gap:9px;align-items:center}
+.row>*{flex:1;min-width:0}
+.metric{font-size:28px;font-weight:bold;color:var(--green)}
+.exercise{padding:13px 0;border-bottom:1px solid #303a32}
+.hidden{display:none}
+.tag{color:var(--green);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+ <small>YOUR PERSONAL FITNESS JOURNAL</small>
+ <h1>GYM <span>TRACKER.</span></h1>
+</header>
+<main>
+<section id="home">
+ <div class="card">
+  <small>BIENVENIDO A TU ENTRENAMIENTO</small>
+  <h2>Hoy toca superarse. 💪</h2>
+  <div class="row">
+   <div><div class="metric" id="total">0</div><small>Entrenamientos</small></div>
+   <div><div class="metric" id="records">0</div><small>Series registradas</small></div>
+  </div>
+  <br><button class="primary" onclick="show('train')">EMPEZAR ENTRENAMIENTO</button>
+ </div>
+ <div class="card">
+  <h2>Último entrenamiento</h2>
+  <div id="last" class="muted">Todavía no tienes entrenamientos registrados.</div>
+ </div>
+ <div class="card">
+  <h2>Accesos rápidos</h2>
+  <button class="secondary" onclick="show('routines')">Mis rutinas</button>
+  <button class="secondary" onclick="show('history')">Mi historial</button>
+ </div>
+</section>
+
+<section id="train" class="hidden">
+ <h2>Entrenamiento actual</h2>
+ <div class="card">
+  <label>Nombre del entrenamiento</label>
+  <input id="workoutName" placeholder="Ej. Pecho y tríceps">
+  <label>Ejercicio</label>
+  <select id="exercise"></select>
+  <div class="row">
+   <div><label>Peso (kg)</label><input id="weight" type="number" min="0" step="0.5" placeholder="30"></div>
+   <div><label>Repeticiones</label><input id="reps" type="number" min="1" placeholder="12"></div>
+  </div>
+  <label>Número de serie</label>
+  <input id="setNumber" type="number" min="1" value="1">
+  <button class="primary" onclick="addSet()">+ GUARDAR SERIE</button>
+  <div id="sessionSets"></div>
+  <br>
+  <button class="primary" onclick="finishWorkout()">FINALIZAR ENTRENAMIENTO</button>
+ </div>
+ <div class="card">
+  <h3>Descanso entre series</h3>
+  <div class="metric" id="timer">01:30</div>
+  <div class="row">
+   <button class="secondary" onclick="startTimer()">Iniciar</button>
+   <button class="secondary" onclick="stopTimer()">Reiniciar</button>
+  </div>
+ </div>
+</section>
+
+<section id="routines" class="hidden">
+ <h2>Mis ejercicios</h2>
+ <div class="card">
+  <label>Nuevo ejercicio</label>
+  <input id="newExercise" placeholder="Ej. Press banca">
+  <button class="primary" onclick="addExercise()">AÑADIR EJERCICIO</button>
+ </div>
+ <div class="card" id="exerciseList"></div>
+</section>
+
+<section id="history" class="hidden">
+ <h2>Historial</h2>
+ <div id="historyList"></div>
+</section>
+
+<section id="stats" class="hidden">
+ <h2>Tu progreso</h2>
+ <div class="card">
+  <small>ENTRENAMIENTOS COMPLETADOS</small>
+  <div class="metric" id="statWorkouts">0</div>
+  <small>SERIES REALIZADAS</small>
+  <div class="metric" id="statSets">0</div>
+  <small>MEJOR PESO REGISTRADO</small>
+  <div class="metric" id="bestWeight">0 kg</div>
+ </div>
+ <div class="card">
+  <h3>Copias de seguridad</h3>
+  <button class="primary" onclick="backup()">EXPORTAR MIS DATOS</button>
+  <br><br>
+  <label>Restaurar copia de seguridad</label>
+  <input type="file" id="restoreFile" accept=".json">
+  <button class="secondary" onclick="restore()">IMPORTAR DATOS</button>
+ </div>
+</section>
+</main>
+<nav>
+ <button class="active" onclick="show('home',this)"><span>⌂</span>Inicio</button>
+ <button onclick="show('train',this)"><span>🏋</span>Entrenar</button>
+ <button onclick="show('routines',this)"><span>☷</span>Ejercicios</button>
+ <button onclick="show('history',this)"><span>◷</span>Historial</button>
+ <button onclick="show('stats',this)"><span>▥</span>Progreso</button>
+</nav>
+<script>
+const defaults=['Press banca','Press inclinado','Aperturas','Sentadilla','Prensa','Peso muerto','Jalón al pecho','Remo','Curl bíceps','Extensión tríceps','Press militar','Elevaciones laterales','Extensión cuádriceps','Curl femoral','Gemelos','Abdominales'];
+let data=JSON.parse(localStorage.getItem('gymData')||'{"workouts":[],"exercises":[]}');
+if(!data.exercises.length)data.exercises=defaults;
+let current=[],timerInterval=null,seconds=90;
+function save(){localStorage.setItem('gymData',JSON.stringify(data));refresh()}
+function show(id,btn){
+ document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
+ document.getElementById(id).classList.remove('hidden');
+ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+ if(btn)btn.classList.add('active');
+ refresh();
+}
+function refresh(){
+ let sets=data.workouts.reduce((n,w)=>n+w.sets.length,0);
+ document.getElementById('total').textContent=data.workouts.length;
+ document.getElementById('records').textContent=sets;
+ document.getElementById('statWorkouts').textContent=data.workouts.length;
+ document.getElementById('statSets').textContent=sets;
+ let all=data.workouts.flatMap(w=>w.sets);
+ document.getElementById('bestWeight').textContent=(all.length?Math.max(...all.map(s=>s.weight)):0)+' kg';
+ let last=data.workouts.at(-1);
+ document.getElementById('last').textContent=last?last.name+' · '+last.date:'Todavía no tienes entrenamientos registrados.';
+ document.getElementById('exercise').innerHTML=data.exercises.map(e=>`<option>${escapeHTML(e)}</option>`).join('');
+ document.getElementById('exerciseList').innerHTML=data.exercises.map((e,i)=>`<div class="exercise row"><span>${escapeHTML(e)}</span><button class="secondary" onclick="removeExercise(${i})">Eliminar</button></div>`).join('');
+ document.getElementById('historyList').innerHTML=data.workouts.slice().reverse().map(w=>`<div class="card"><h3>${escapeHTML(w.name)}</h3><small>${w.date} · ${w.sets.length} series</small>${w.sets.map(s=>`<div class="exercise">${escapeHTML(s.exercise)} — ${s.weight} kg × ${s.reps} rep.</div>`).join('')}</div>`).join('')||'<p class="muted">Aún no hay entrenamientos.</p>';
+}
+function addExercise(){
+ let e=document.getElementById('newExercise').value.trim();
+ if(!e)return;
+ if(data.exercises.includes(e))return alert('Ese ejercicio ya existe.');
+ data.exercises.push(e);document.getElementById('newExercise').value='';save();
+}
+function removeExercise(i){if(confirm('¿Eliminar este ejercicio?')){data.exercises.splice(i,1);save()}}
+function addSet(){
+ let exercise=document.getElementById('exercise').value;
+ let weight=Number(document.getElementById('weight').value);
+ let reps=Number(document.getElementById('reps').value);
+ let number=Number(document.getElementById('setNumber').value);
+ if(!exercise||!Number.isFinite(weight)||weight<0||!Number.isInteger(reps)||reps<1||!Number.isInteger(number)||number<1)return alert('Comprueba el peso, las repeticiones y la serie.');
+ current.push({exercise,weight,reps,number});
+ document.getElementById('sessionSets').innerHTML=current.map(s=>`<div class="exercise">${escapeHTML(s.exercise)} · Serie ${s.number}: ${s.weight} kg × ${s.reps}</div>`).join('');
+ document.getElementById('setNumber').value=number+1;
+ document.getElementById('weight').value='';
+ document.getElementById('reps').value='';
+}
+function finishWorkout(){
+ if(!current.length)return alert('Registra al menos una serie.');
+ data.workouts.push({name:document.getElementById('workoutName').value.trim()||'Entrenamiento',date:new Date().toLocaleString('es-ES'),sets:[...current]});
+ current=[];document.getElementById('sessionSets').innerHTML='';document.getElementById('setNumber').value=1;save();show('home');
+ alert('¡Entrenamiento guardado!');
+}
+function startTimer(){
+ stopTimer();
+ timerInterval=setInterval(()=>{
+ seconds--;
+ document.getElementById('timer').textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
+ if(seconds<=0){stopTimer();if(navigator.vibrate)navigator.vibrate([300,150,300]);}
+ },1000);
+}
+function stopTimer(){clearInterval(timerInterval);timerInterval=null;seconds=90;document.getElementById('timer').textContent='01:30'}
+function backup(){
+ let a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+ a.href=url;a.download='gym-tracker-backup.json';a.click();URL.revokeObjectURL(url);
+}
+function restore(){
+ let file=document.getElementById('restoreFile').files[0];if(!file)return alert('Selecciona un archivo.');
+ let reader=new FileReader();
+ reader.onload=()=>{try{let d=JSON.parse(reader.result);if(!Array.isArray(d.workouts)||!Array.isArray(d.exercises))throw Error();data=d;save();alert('Copia restaurada.');}catch(e){alert('Archivo de copia no válido.')}};
+ reader.readAsText(file);
+}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));
+refresh();
+</script>
+</body>
+</html>

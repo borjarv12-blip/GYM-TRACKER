@@ -1,0 +1,12 @@
+
+{
+  "name": "GYM TRACKER",
+  "short_name": "Gym Tracker",
+  "description": "Mi aplicación personal de entrenamiento",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101411",
+  "theme_color": "#101411",
+  "icons": []
+}
